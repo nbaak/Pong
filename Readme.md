@@ -1,3 +1,5 @@
+![Screensot](pong.png "PONG")
+
 # Dependancies
 You need PyGame to run this Code!
 
