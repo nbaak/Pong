@@ -1,3 +1,5 @@
+import os
+
 import pygame
 import pandas as pd
 from sklearn.neighbors import KNeighborsRegressor
@@ -19,8 +21,7 @@ velocity = 1
 
 
 sample_enabled = False
-data_file = "data.csv"
-
+data_file = os.path.dirname(os.path.realpath(__file__)) + "/data.csv"
 
 color_bg = pygame.Color("black")
 color_border = pygame.Color("green")
