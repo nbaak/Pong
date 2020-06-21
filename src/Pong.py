@@ -8,8 +8,6 @@ from objects.Ball import Ball
 from objects.Borders import Borders
 from objects.Bar import Bar
 
-#from objects.Bar import Bar
-
 # variables:
 width   = 1200
 height  =  600
@@ -49,7 +47,7 @@ borders.draw(surface)
 
 # place objectd
 ball = Ball(v_x = -velocity, v_y = velocity, color=pygame.Color("red"))
-ball.radius = 20
+ball.radius = 10
 ball.set_position(width-ball.radius -30, height//2)
 
 bar = Bar(width-border, height//2 + bar_height//2, border, bar_height)
@@ -67,55 +65,70 @@ if not sample_enabled:
     data = data.drop_duplicates()
     data.describe()
     
-    X = data.drop(columns="bar.y")
-    y = data["bar.y"]
+    input_matrix = data.drop(columns="bar.y")
+    output_vector = data["bar.y"]
     
     ai = KNeighborsRegressor(n_neighbors=3)
-    ai.fit(X, y)
+    ai.fit(input_matrix, output_vector)
     
     data_frame = pd.DataFrame(columns=['x','y','v_x','v_y'])
+    
+    
+# 
+pause = False
 
 while True:
     event = pygame.event.poll()
-    pressed = pygame.key.get_pressed()
-    
+        
     # exit game
-    if event.type == pygame.QUIT or pressed[pygame.K_q]:        
+    if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_q):        
         print (f"Scores:\nleft: {points_left}\nright: {points_right}")
-        break        
+        break
     
-    # ball leaves game
-    if not game_box.colliderect(ball.box):
-        if ball.v_x > 0:
-            print ("left scores!")
-            points_left += 1
-        elif ball.v_x < 0:
-            print ("right scores!")
-            points_right += 1
+    # pause/unpause game
+    if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+        if pause:
+            pause = False
+        else:
+            pause = True
+
+    
+    if not pause:    
+        # ball leaves game
+        if not game_box.colliderect(ball.box):
+            if ball.v_x > 0:
+                print ("left scores!")
+                points_left += 1
+            elif ball.v_x < 0:
+                print ("right scores!")
+                points_right += 1
+            
+            ball.reset(width-ball.radius -30, height//2,-velocity, surface, color_bg)
         
-        ball.reset(width-ball.radius -30, height//2,-velocity, surface, color_bg)
-    
-    # check collisions
-    ball.collision(borders.collision(ball))
-    ball.collision(player.collision(ball))
-    ball.collision(bar.collision(ball))
-    
-    ball.update(surface, color_trail)
-    
-    player.update(surface, color_bg)
-    
-    if sample_enabled:
-        #bar.update_cheat(surface, color_bg, ball.y-bar.height//2)
-        bar.update(surface, color_bg)
-        print (f"{ball.x},{ball.y},{ball.v_x},{ball.v_y},{bar.y}", file=sample_data)
+        # check collisions
+        ball.collision(borders.collision(ball))
+        ball.collision(player.collision(ball))
+        ball.collision(bar.collision(ball))
         
-    else:    
-        predict = data_frame.append({'x':ball.x, 'y':ball.y, 'v_x': ball.v_x, 'v_y':ball.v_y}, ignore_index=True)
-        move_to = ai.predict(predict)
+        ball.update(surface, color_trail)
         
-        bar.update_cheat(surface, color_bg, move_to[0])
-       
-    pygame.display.flip()
+        player.update(surface, color_bg)
+        
+        if sample_enabled:
+            #bar.update_cheat(surface, color_bg, ball.y-bar.height//2)
+            bar.update(surface, color_bg)
+            print (f"{ball.x},{ball.y},{ball.v_x},{ball.v_y},{bar.y}", file=sample_data)
+            
+        else:    
+            predict = data_frame.append({'x':ball.x, 'y':ball.y, 'v_x': ball.v_x, 'v_y':ball.v_y}, ignore_index=True)
+            move_to = ai.predict(predict)
+            
+            bar.update_cheat(surface, color_bg, move_to[0])
+           
+        pygame.display.flip()
+    
+    else:
+        pass
     
     
 pygame.quit()
